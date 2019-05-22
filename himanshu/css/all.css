@@ -327,14 +327,14 @@ h2.slogan{
 	font-size: 18px;
 	padding: 0 0 0 20px;
 }
-.progress li span.photoshop{width: 100%;}
-.progress li span.illustrator{width: 70%;}
-.progress li span.indesign{width: 40%;}
-.progress li span.flash{width: 80%;}
-.progress li span.html{width: 75%;}
-.progress li span.wordpress{width: 85%;}
-.progress li span.jquery{width: 70%;}
-.progress li span.seo{width: 40%;}
+.progress li span.Nodejs{width: 100%;}
+.progress li span.python{width: 70%;}
+.progress li span.java{width: 80%;}
+.progress li span.Dialogflow{width: 100%;}
+.progress li span.AngularJS{width: 75%;}
+.progress li span.AI{width: 85%;}
+.progress li span.Neural{width: 70%;}
+.progress li span.Deep{width: 80%;}
 .plagin_list{
 	width: 100%;
 	overflow: hidden;

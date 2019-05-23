@@ -1,100 +1,523 @@
-<!DOCTYPE html>
-<!--[if lte IE 8]> <html class="oldie" lang="en"> <![endif]-->
-<!--[if IE 9]> <html class="ie9" lang="en"> <![endif]-->
-<!--[if gt IE 9]><!--> <html lang="en"> <!--<![endif]-->
-<head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-	<meta name="format-detection" content="telephone=no">
-	<title>Himanshu Tiwari</title>
-	<link rel="stylesheet" href="js/fancybox/jquery.fancybox.css" type="text/css" media="screen" />
-	<link rel="stylesheet" href="css/all.css" />
-	<link rel="stylesheet" href="css/screen.css" />
-	<!--[if lt IE 9]>
-		<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-	<![endif]-->
-</head>
-<body>
-	<div id="wrapper">
-		<div class="wrapper-holder">
-			<header id="header">
-				<a class="menu_trigger" href="#">menu</a>
-					<nav id="nav">
-						<ul>
-							<li><a class="active" href="index.html">Home</a></li>
-							<li><a href="myskills.html">My skills</a></li>
-							
-							<li><a href="Contact.html">Contact</a></li>
-						</ul>
-					</nav>
-				<h1 class="logo">Himanshu Tiwari</h1>
-				<h2 class="slogan">Professional Data Scientist and Chatbot Developer</h2>
-			</header>
-		</div>
-		<div class="wrapper-holder grey">
-			<section id="main">
-				<h2>Here are my biggest achievements</h2>
-				<div class="box_timeline_holder">
-					<div class="box_timeline">
-						<ul>
-							<li>
-								<div class="date">
-									<span>12/17</span>
-								</div>
-								<h3>Cloud Engineer</h3>
-								<p>Got trained on Cloud Engineering Architectures,Developed Microservices. Handled Cloud Architecture resolutions</p>
-							</li>
-							<li>
-								<div class="date">
-									<span>06/18</span>
-								</div>
-								<h3>Google Cloud Platform</h3>
-								<p>Got Data engineering training in Google India on Big Data and ML, certified by coursera and udemy</p>
-							</li>
-							<li>
-								<div class="date">
-									<span>09/18</span>
-								</div>
-								<h3>Google API Engineer</h3>
-								<p>Worked with GCP in developing API proxies and Integrated with REST API's of SAP for Google. </p>
-							</li>
-							<li>
-								<div class="date">
-									<span>12/18</span>
-								</div>
-								<h3>Cloud Native Development</h3>
-								<p>Worked in developing microservice and cloud native apps by using Java,Angular and PCF. Got certified in PCF</p>
-							</li>
-							<li>
-								<div class="date">
-									<span>02/19</span>
-								</div>
-								<h3>Voice assistant chatbot</h3>
-								<p>Worked on developing chatbot using GCP Dialogflow and integrated with IVR system.Trained system phrases with NLP and implemented Deep learning using Tensor Flow</p>
-							</li>
-						</ul>
-					</div>
-				</div>
-			</section>
-		</div>
-		<footer id="footer">
-			<div class="footer-content">
-				<ul class="social">
-					<li class="email"><a href="#">Email</a></li>
-					<li class="facebook"><a href="#">Facebook</a></li>
-					<li class="google"><a href="#">Google+</a></li>
-					<li class="twitter"><a href="#">Twitter</a></li>
-					<li class="pinterest"><a href="#">Pinterest</a></li>
-				</ul>
-				<p class="copy">Copyright 2019 Himanshu Tiwari. All rights reserved.</p>
-			</div>
-		</footer>	
-	</div>
-	<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
-	<script src="js/isotope.pkgd.min.js"></script>
-	<script src="js/cells-by-row.js"></script>
-	<script type="text/javascript" src="js/fancybox/jquery.fancybox.pack.js"></script>
-	<script type="text/javascript" src="js/main.js"></script>
-</body>
-</html>
+// See https://github.com/dialogflow/dialogflow-fulfillment-nodejs
+// for Dialogflow fulfillment library docs, samples, and to report issues
+'use strict';
+console.log("HI I am here");
+const functions = require('firebase-functions');
+
+const { WebhookClient } = require('dialogflow-fulfillment');
+const { Card, Suggestion } = require('dialogflow-fulfillment');
+const admin = require('firebase-admin');
+/*const {
+  DialogFlow,
+  DefaultResponse,
+  SimpleResponse,
+  BasicCard,
+  telephonySynthesizeSpeech,
+  Suggestions,
+  Permission,
+  UpdatePermission,
+  RegisterUpdate,
+  } = require('actions-on-google');*/
+const https = require('https');
+
+//const { WebhookClient } = require('dialogflow-fulfillment');
+//const { Card, Suggestion } = require('dialogflow-fulfillment');
+//const admin = require('firebase-admin');
+//const https = require('https');
+
+admin.initializeApp();
+/*{
+credential: admin.credential.applicationDefault(), 
+databaseURL: 'ws://boldplay.firebaseio.com' ,});*/
+
+const firestore = require('@google-cloud/firestore');
+const db = new firestore();
+
+//const firestore = require('@google-cloud/firestore');
+//const db = new firestore();
+
+process.env.DEBUG = 'dialogflow:debug'; // enables lib debugging statements
+
+exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, response) => {
+  const agent = new WebhookClient({ request, response });
+  //agent.requestSource = agent.TELEPHONY;
+  console.log('Dialogflow Request headers: ' + JSON.stringify(request.headers));
+  console.log('Dialogflow Request body: ' + JSON.stringify(request.body));
+
+  function welcome(agent) {
+    agent.add(`Welcome to my agent!`);
+  }
+
+  function verifyPhoneNumber(agent) {
+    var parameters = agent.parameters;
+    console.log(parameters);
+    var phone_number = agent.parameters.phone_number;
+    var phone_number2 = (phone_number.replace(/[^a-zA-Z ]/g, "")).trim();
+    console.log(typeof phone_number);
+    console.log(typeof phone_number2);
+
+    return db.collection('data').where("phone1", "==", (phone_number)).get()
+      .then(snapshot => {
+        if (snapshot.empty) {
+          console.log("hi");
+          agent.add('Sorry, we are unable to find your account details based on this phone number .');
+          agent.add('Please Try Again.');
+          agent.setContext({ 'name': 'phone_number_pending', 'lifespan': 5, 'parameters': {} });
+          agent.add(new Suggestion(`Try Again`));
+
+        }
+        else {
+          console.log(snapshot.docs[0]);
+          var address = snapshot.docs[0].data().address;
+          var id = snapshot.docs[0].id;
+          var fname = snapshot.docs[0].data().first_name;
+          var lname = snapshot.docs[0].data().last_name;
+          var address = snapshot.docs[0].data().address;
+          var id = snapshot.docs[0].id;
+          //agent.add('Thank you for providing the details');
+          var fname = snapshot.docs[0].data().first_name;
+          var lname = snapshot.docs[0].data().last_name;
+          var custname = fname + " " + lname;
+          agent.add('Thank you for verifying your account  .' + custname);
+          agent.add('I have your address as ' + address);
+         agent.add('Are the details correct ? ')
+          agent.setContext({ 'name': 'user_verified', 'lifespan': 100, 'parameters': { 'name': custname, 'User_id': id } });
+          agent.add(new Suggestion(`No Power`));
+          agent.add(new Suggestion(`Tree is Down`));
+
+        }
+      }).catch(err => {
+        console.error(err);
+      });
+
+   
+  }
+
+  
+
+  function fallback(agent) {
+    agent.add(`I didn't understand`);
+    agent.add(`I'm sorry, can you try again?`);
+  }
+
+  
+  
+  function verify_address(agent) 
+  {
+    var phone_number = "9000010001";
+    console.log("phone number being searched " + phone_number);
+    return db.collection('data').where("phone1", "==", (phone_number)).get()
+      .then(snapshot => {
+        if (snapshot.empty) {
+          agent.add('Sorry, we are unable to find your account details based on this  number .');
+          agent.add('Please Try Again.');
+          agent.setContext({ 'name': 'user_unverified', 'lifespan': 5, 'parameters': {} });
+          agent.add(new Suggestion(`Try Again`));
+
+        }
+        else {
+          console.log(snapshot.docs[0]);
+          var address = snapshot.docs[0].data().address;
+          var id = snapshot.docs[0].id;
+          //agent.add('Thank you for providing the details');
+          var fname = snapshot.docs[0].data().first_name;
+          var lname = snapshot.docs[0].data().last_name;
+          var custname = fname + " " + lname;
+          agent.add('Thank you for verifying your account  .' + custname);
+          agent.add('I have your address as ' + address);
+          agent.add('Are the details correct ? ')
+          agent.setContext({ 'name': 'user_verified', 'lifespan': 100, 'parameters': { 'name': custname, 'User_id': id } });
+
+        }
+      }).catch(err => {
+        console.error(err);
+
+      });
+  }
+  
+
+  function getAddress(agent) 
+  {
+    var flag = true;
+    console.log("Hiiii");
+    const sName = agent.parameters['street-name'];
+    const city = agent.parameters['geo-city'];
+    const state = agent.parameters['geo-state'];
+    const zip = agent.parameters['zip-code'];
+    const gotCity = city.length > 0;
+    const gotSname = sName.length > 0;
+
+    const gotState = state.length > 0;
+   const gotZip = zip.length > 0;
+    if (gotZip && gotCity && gotState && gotSname) {
+      flag = false;
+      agent.add('Got it. Before I submit an outage report, I would like to ask you a few questions about your outage. Would that be okay?');
+    }
+    else {
+      if (gotCity && gotZip && gotState && !gotSname) {
+        agent.add(`Nice, could you tell me your Street name `);
+        agent.setContext({ 'name': 'address', 'lifespan': 100, 'parameters': { 'state': state, 'city': city, 'zip': zip } });
+       flag = false;
+      } else if (gotSname && gotCity && gotState && !gotZip) {
+
+        const gotState = state.length > 0;
+        const gotZip = zip.length > 0;
+        if (gotZip && gotCity && gotState && gotSname) {
+          flag = false;
+
+          agent.add('Got it. Before I submit an outage report, I would like to ask you a few questions about your outage. Would that be okay?');
+
+          agent.add('Got it. Before I submit an outage report, I would like to ask you a few questions about your outage. Would that be okay?');
+        }
+        else {
+          if (gotCity && gotZip && gotState && !gotSname) {
+            agent.add(`Nice, could you tell me your Street name `);
+            agent.setContext({ 'name': 'address', 'lifespan': 100, 'parameters': { 'state': state, 'city': city, 'zip': zip } });
+            flag = false;
+          } else if (gotSname && gotCity && gotState && !gotZip) {
+
+            agent.add('Could You please tell me your ZIP code?');
+            agent.setContext({ 'name': 'address', 'lifespan': 100, 'parameters': { 'state': state, 'city': city, 'street': sName } });
+            flag = false;
+          } else if (gotSname && gotCity && gotZip && !gotCity) {
+            agent.add('Could you Let me know which city you are in');
+            agent.setContext({ 'name': 'address', 'lifespan': 100, 'parameters': { 'state': state, 'street': sName, 'zip': zip } });
+            flag = false;
+          }
+          else if (gotSname && gotCity && gotZip && !gotState) {
+            agent.add('Could you please Let me know which state you are in');
+            agent.setContext({ 'name': 'address', 'lifespan': 100, 'parameters': { 'state': state, 'city': city, 'zip': zip } });
+            flag = false;
+          }
+
+          if (flag) { console.log(agent.context.get('address')); }
+
+          //  agent.setContext({'name':'power_outage_yes_ask_question'});
+        }
+      }
+    }
+  }
+
+      function seekDetails(phone) {
+        //var acc_number, id;
+
+      }
+
+      function callSAP(agent)
+       {
+
+        var phone_number = "9000010001";
+        console.log("SAP here");
+        var acc_number, id;
+        db.collection('data').where("phone1", "==", (phone_number)).get()
+          .then(snapshot => {
+            if (snapshot.empty) {
+              console.log("Sorry something went wrong");
+
+            }
+            else {
+              console.log(snapshot.docs[0]);
+              acc_number = snapshot.docs[0].data().Account_number;
+              id = snapshot.docs[0].id;
+
+              return new Promise((resolve, reject) => {
+                //"https://b7d382812.apimanagement.us1.hana.ondemand.com/Notification/CREATE_SERVICE_NOTIFSet('POMR')?$filter=ICa eq '211000001787'&$format=json"
+                var url = "https://b7d382812.apimanagement.us1.hana.ondemand.com/Notification/CREATE_SERVICE_NOTIFSet('POMR')?$filter=ICa eq" + "'" + acc_number + "'" + "'&$format=json";
+                https.get(url, (resp) => {
+                  let data = '';
+                  resp.on('data', (chunk) => {
+                    data += chunk;
+                  });
+
+                  console.log("Something here");
+                  resp.on('end', () => {
+                    console.log("successsss");
+                    var jsonData = (JSON.parse(data));
+                    console.log(JSON.parse(data));
+                    var key = jsonData["d"];
+                    const val = key["EvNotifNo"];
+                    console.log(val);
+                    write_to_db(val, id);
+                    resolve();
+                  });
+
+                }).on("error", (err) => {
+                  console.log("Error: " + err.message);
+                });
+              });
+
+            }
+          }).catch(err => {
+            console.error(err);
+          });
+        //  console.log(details[1]);
+
+        console.log("gotcha");
+
+      }
+
+      function write_to_db(param, docID) {
+
+        var theDate = new Date(Date.now());
+        var month = new Array();
+        month[0] = "January";
+        month[1] = "February";
+        month[2] = "March";
+        month[3] = "April";
+        month[4] = "May";
+        month[5] = "June";
+        month[6] = "July";
+        month[7] = "August";
+        month[8] = "September";
+        month[9] = "October";
+        month[10] = "November";
+        month[11] = "December";
+        var n = month[theDate.getMonth()];
+        console.log(n);
+        var day = theDate.getDate();
+        var date = day + " " + n;
+
+        console.log("hey" + date);
+
+        var data = db.collection("data").doc(docID);
+        return data.update({
+          NotifNo: param,
+          date_created: date,
+          time_created: formatAMPM(new Date)
+        })
+          .then(function () {
+            console.log("Document successfully updated!");
+          })
+          .catch(function (error) {
+            // The document probably doesn't exist.
+            console.error("Error updating document: ", error);
+
+          });
+
+      }
+
+      function formatAMPM(date) {
+        var hours = date.getHours();
+        var minutes = date.getMinutes();
+        var ampm = hours >= 12 ? 'pm' : 'am';
+        hours = hours % 12;
+        hours = hours ? hours : 12; // the hour '0' should be '12'
+        minutes = minutes < 10 ? '0' + minutes : minutes;
+        var strTime = hours + ':' + minutes + ' ' + ampm;
+        return strTime;
+      }
+
+      
+
+      function check_balance(agent) {
+        var phone_number = "9000010001";
+        console.log("phone number being searched " + phone_number);
+        return db.collection('data').where("phone1", "==", (phone_number)).get()
+          .then(snapshot => {
+            if (snapshot.empty) {
+              agent.add('Sorry, we are unable to find your account details based on this  number .');
+              agent.add('Please Try Again.');
+              agent.setContext({ 'name': 'user_unverified', 'lifespan': 5, 'parameters': {} });
+              agent.add(new Suggestion(`Try Again`));
+
+            }
+            else {
+              console.log(snapshot.docs[0]);
+              var Account_balance = snapshot.docs[0].data().Account_balance;
+              var Due_date = snapshot.docs[0].data().Due_date;
+              var card_no = snapshot.docs[0].data().card_no;
+              var id = snapshot.docs[0].id;
+              //agent.add('Thank you for providing the details');
+              var fname = snapshot.docs[0].data().first_name;
+              var lname = snapshot.docs[0].data().last_name;
+              var custname = fname + " " + lname;
+              // let conv = agent.conv();
+              agent.add('Thank you for verifying your account  ' + custname +  '\n\n.   According to our system your account balance of $   ' + Account_balance + '   is due by ' + Due_date + '.   Would you like to pay this balance with your credit card on file ending with   ' + card_no + '?');
+              //  agent.add('Thank you for verifying your account  .'+ custname +'  According to our system your account balance of $ ' + Account_balance + ' is due by ' + Due_date  + ' Would you like to pay this balance with your credit card on file ending with ' + card_no + '?');
+              // agent.add('According to our system your account balance of $' + Account_balance + ' is due by ' + Due_date);
+              //agent.add('Would you like to pay this balance with your credit card on file ending with ' + card_no + '?')
+              //agent.context.set({'name':'user_verified','lifespan':100 ,'parameters': {'name':custname,'User_id':id}});
+              //  agent.add(conv);
+
+            }
+          }).catch(err => {
+            console.error(err);
+          });
+      }
+     
+      function confirm_payment(agent) {
+        var parameters = agent.parameters;
+        var number_sequence = agent.parameters.number_sequence;
+        console.log("phone number being searched " + number_sequence + typeof (number_sequence));
+        return db.collection('data').where("cvv", "==", parseInt(number_sequence)).get()
+          .then(snapshot => {
+            if (snapshot.empty) {
+              agent.add('Sorry, we are unable to find your account details based on this CVV number .');
+              agent.add('Please Try Again.');
+              agent.setContext({ 'name': 'user_unverified', 'lifespan': 5, 'parameters': {} });
+              agent.add(new Suggestion(`Try Again`));
+
+            }
+            else {
+              console.log(snapshot.docs[0]);
+              var Account_balance = snapshot.docs[0].data().Account_balance;
+              //var Due_date =snapshot.docs[0].data().Due_date;
+              //var card_no = snapshot.docs[0].data().card_no;
+              var id = snapshot.docs[0].id;
+              //agent.add('Thank you for providing the details');
+              var fname = snapshot.docs[0].data().first_name;
+              var lname = snapshot.docs[0].data().last_name;
+              var custname = fname + " " + lname;
+              agent.add('Great!  ' + custname + '  Your outstanding amount of   ' + Account_balance + '  dollars on your bill was paid successfully  ' + '  Can I help you with anything else ? ');
+              //agent.add('Your outstanding amount of ' + Account_balance + ' dollars on your bill was paid successfully');
+              //agent.add('Can I help you with anything else ? ')
+              agent.setContext({ 'name': 'user_verified', 'lifespan': 100, 'parameters': { 'name': custname, 'User_id': id } });
+
+            }
+          }).catch(err => {
+            console.error(err);
+          });
+      }
+      function check_bill(agent) {
+        var phone_number = "9000010001";
+        console.log("phone number being searched " + phone_number);
+        return db.collection('data').where("phone1", "==", (phone_number)).get()
+          .then(snapshot => {
+            if (snapshot.empty) {
+              agent.add('Sorry, we are unable to find your account details based on this  number .');
+              agent.add('Please Try Again.');
+              agent.setContext({ 'name': 'user_unverified', 'lifespan': 5, 'parameters': {} });
+              agent.add(new Suggestion(`Try Again`));
+
+            }
+            else {
+              console.log(snapshot.docs[0]);
+              var Account_balance = snapshot.docs[0].data().Account_balance;
+              //var Due_date =snapshot.docs[0].data().Due_date;
+              //var card_no = snapshot.docs[0].data().card_no;
+              var id = snapshot.docs[0].id;
+              //agent.add('Thank you for providing the details');
+              var fname = snapshot.docs[0].data().first_name;
+              var lname = snapshot.docs[0].data().last_name;
+              var custname = fname + " " + lname;
+              //agent.add('Great! '+ custname  );
+              agent.add('Great!  ' + custname + '  Your bill amount for this month is  ' + Account_balance + '  dollars.  ' + '  Do you need further assistance?  ' + '  You can simply say "no", or, "pay my bill", "help me understand my bill", or, "speak to an agent".  ');
+              //agent.add('Do you need further assistance? ')
+              //agent.add('You can simply say "no", or, "pay my bill", "help me understand my bill", or, "speak to an agent". ')
+              //agent.setContext({'name':'user_verified','lifespan':100 ,'parameters': {'name':custname,'User_id':id}});
+
+            }
+          }).catch(err => {
+            console.error(err);
+          });
+
+        
+
+      }
+      function verify_address_outage(agent)
+      {
+        var phone_number = "9000010001";
+        console.log("phone number being searched "+ phone_number);
+        return db.collection('data').where("phone1","==",(phone_number)).get()
+          .then( snapshot => {
+              if(snapshot.empty){
+                    agent.add('Sorry, we are unable to find your account details based on this  number . Please Try Again.');
+                    
+                    agent.setContext({'name':'user_unverified','lifespan':5 ,'parameters': {}});
+                    agent.add(new Suggestion(`Try Again`));
+                    
+                }
+              else {
+                    console.log(snapshot.docs[0]);
+                    var address = snapshot.docs[0].data().address;
+                    var id =snapshot.docs[0].id;
+                    var NotifNo = snapshot.docs[0].data().NotifNo;
+                    //agent.add('Thank you for providing the details');
+                    var fname= snapshot.docs[0].data().first_name;
+                    var lname= snapshot.docs[0].data().last_name; 
+                    var custname = fname +" " +lname ;
+                    var creation_time=snapshot.docs[0].data().time_created;
+                    //agent.add('Thank you for verifying your account  .'+ custname  );
+                    var creation_date = snapshot.docs[0].data().date_created;
+    
+                    agent.add("Thank you for verifying your account "+       custname +" , Are you calling about power outage you reported on   " +  creation_date +"," +  creation_time +" at "+ address );
+                    
+                    agent.setContext({'name':'check_outage_status_yes-followup','lifespan':15 ,'parameters': {'doc_id': id, 'NotifNo': NotifNo}});
+                    
+                  }
+        }).catch(err => {
+            console.error(err);
+        });
+    
+    
+      }
+
+      function outage_status(agent)          
+  {
+    console.log("in OUtage_ status")
+      var NotifNo =agent.getContext('check_outage_status_yes-followup').parameters.NotifNo;
+     
+      console.log("acc id  is   "+ NotifNo)
+      //var url = "https://b7d382812.apimanagement.us1.hana.ondemand.com/Notification/CREATE_SERVICE_NOTIFSet('POMR')?$filter=ICa eq" + "'" + acc_number + "'" + "'&$format=json";
+      //const url= "https://b7d382812.apimanagement.us1.hana.ondemand.com/NotifStatus/NotifDetailSet('300000183')?&$format=json "
+      const url= "https://b7d382812.apimanagement.us1.hana.ondemand.com/NotifStatus/NotifDetailSet("+"'"+NotifNo+"'"+")?&$format=json "
+      console.log("URL CALLED     "+ url)
+      return new Promise((resolve, reject) =>
+       {
+        https.get(url, function(resp) 
+        {
+          var json = "";
+          
+          resp.on("data", function(chunk) 
+          {    
+            console.log("received JSON response: " + chunk);
+            json += chunk;
+            var jsonData = JSON.parse(chunk);
+            var key = jsonData["d"];
+            var current_status = key["SysStatus"]
+            console.log("write 2 db called ")
+            var chat = ("The current status is " + current_status);
+            if (current_status=="Notification completed")
+            {
+
+               console.log("sap status received"+current_status)
+              agent.add("As per the details in the system your outage status is  "+current_status +". We sent our maintenance team to fix the issue and we expect power to be back in your apartment in next 10 hours .Thank you for your patience. Meanwhile ,We can also give you a call if there is any update. Would you like to sign up for the notification?");
+            }
+
+            else if (current_status=="Outstanding notification")
+            {
+              console.log("sap status received"+current_status)
+              agent.add("As per the details in the system your outage status is  "+  current_status +". We sent our maintenance team to fix the issue and we expect power to be back in your apartment in next few hours .Thank you for your patience. Meanwhile ,We can also give you a call if there is any update. Would you like to sign up for the notification?");
+             
+            }
+            else
+            {
+              agent.add("We sent our maintenance team to fix the issue and we expect power to be back in your apartment in next few hours . Thank you for your patience. meanwhile ,We can also give you a call if there is any update.  Would you like to sign up for the notification?");
+            }
+            //agent.add(bodyObject)
+            //agent.add(" As per our record your current status is "+ current_status );
+            console.log("status Value outage status "+current_status)
+            
+            resolve();
+            //return(agent.add(" "+chat));
+            });
+  
+        
+        });
+      });
+    }
+
+      let intentMap = new Map();
+      intentMap.set('Default Welcome Intent', welcome);  
+      intentMap.set('power_outage_yes', verify_address); 
+      intentMap.set('power_outage_address_no_address', getAddress);
+      intentMap.set('power_outage_yes_ask_question_no', callSAP);
+      intentMap.set('power_outage_no_custom', verifyPhoneNumber);
+      intentMap.set('pay_bill', check_balance);
+   intentMap.set('pay_bill_yes_pay_bill_CVV', confirm_payment);
+           intentMap.set('check_bill_amount', check_bill);
+      intentMap.set('check_outage_status_yes_yes', outage_status);
+  intentMap.set('check_outage_status_yes',verify_address_outage)
+      
+      agent.handleRequest(intentMap);
+    });
